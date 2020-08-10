@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
-import style from './chip8.module.scss'
-import Assembly, { buildAsm, loadAssembly } from './Assembly'
-import { message } from 'antd'
+import React, { Component } from "react"
+import Assembly, { buildAsm, loadAssembly } from "./Assembly"
+import style from "./chip8.module.scss"
+import VM from "./VM"
 interface Props {
   program: ArrayBuffer // 游戏源码
 }
@@ -14,6 +14,7 @@ type DefaultProps = {
 
 export default class Chip8 extends Component<Props & DefaultProps, State> {
   asm?: Assembly
+  vm?: VM
   static defaultProps: DefaultProps = {
     etiMode: false,
   }
@@ -22,13 +23,14 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
     this.state = this.getInitState()
   }
   componentDidMount() {
-    this.log('CHIP-8, Copyright 2020 by Buffge')
-    this.log('All rights reserved')
+    this.log("CHIP-8, Copyright 2020 by Buffge")
+    this.log("All rights reserved")
     if (this.props.etiMode) {
-      this.log('Running in ETI-660 mode')
+      this.log("Running in ETI-660 mode")
     }
-    this.log('Loading game...')
-    this.loadFile(this.props.program)
+    this.log("Loading game...")
+    this.vm = this.loadFile(this.props.program)
+    this.log("program size: " + this.vm.size)
   }
   getInitState = (): State => {
     return {
@@ -43,12 +45,8 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
   }
   loadFile = (program: ArrayBuffer) => {
     const { etiMode } = this.props
-    try {
-      this.asm = buildAsm(program, etiMode)
-      loadAssembly(this.asm, etiMode)
-    } catch (err) {
-      message.error(err)
-    }
+    this.asm = buildAsm(program, etiMode)
+    return loadAssembly(this.asm, etiMode)
   }
   loadRom = () => {}
   render() {

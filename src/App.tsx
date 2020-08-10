@@ -1,6 +1,7 @@
-import React, { Component } from 'react'
-import Chip8 from './chip8/Chip8'
-import style from './assets/sass/app.module.scss'
+import React, { Component } from "react"
+import style from "./assets/sass/app.module.scss"
+import Chip8 from "./chip8/Chip8"
+import { buf } from "./dev"
 interface Props {}
 interface State {
   program?: ArrayBuffer
@@ -13,14 +14,16 @@ export default class App extends Component<Props & DefaultProps, State> {
     this.state = this.getInitState()
   }
   getInitState = (): State => {
-    return {}
+    return {
+      program: new Uint8Array(buf).buffer,
+    }
   }
   render() {
     const { program } = this.state
     return (
       <div className={style.main}>
         <input
-          type={'file'}
+          type={"file"}
           onChange={evt => {
             const file = evt.target.files![0]
             let reader = new FileReader()

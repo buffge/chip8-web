@@ -1,9 +1,9 @@
 export default class VM {
-  rom: ArrayBuffer = new Int8Array(0x1000)
-  memory: ArrayBuffer = new Int8Array(0x1000)
+  rom: ArrayBuffer = new Uint8Array(0x1000).buffer
+  memory: ArrayBuffer = new Uint8Array(0x1000).buffer
   // 视频区域 64x32
-  video: ArrayBuffer = new Int8Array(0x440)
-  stack: ArrayBuffer = new Uint32Array(16)
+  video: ArrayBuffer = new Uint8Array(0x440).buffer
+  stack: ArrayBuffer = new Uint32Array(16).buffer
   sp: number = 0 // 栈指针
   pc: number = 0 // 程序 counter
   // 程序起始地址
@@ -13,9 +13,9 @@ export default class VM {
   // I is the address register.
   i: number = 0 // address register
   //16 个寄存器
-  v: ArrayBuffer = new Int8Array(0x10)
+  v: ArrayBuffer = new Uint8Array(0x10).buffer
   // R are the 8, HP-RPL user flags.
-  r: ArrayBuffer = new Int8Array(0x8)
+  r: ArrayBuffer = new Uint8Array(0x8).buffer
   // DT is the delay timer register. It is set to a time (in ns) in the
   // future and compared against the current time.
   dt: number = 0
@@ -44,5 +44,46 @@ export default class VM {
   constructor(etiMode: boolean) {
     this.etiMode = etiMode
     this.base = this.etiMode ? 0x200 : 0x600
+  }
+  reset = () => {
+    const vm = this
+    let romView = new DataView(vm.rom)
+    let memoryView = new DataView(vm.memory)
+    console.log(new Uint8Array(vm.rom))
+    console.log(new Uint8Array(vm.memory))
+    for (let i = 0; i < vm.rom.byteLength; i++) {
+      memoryView.setUint8(i, romView.getUint8(i))
+    }
+    // reset video memory
+    vm.video = new Uint8Array(0x440).buffer
+
+    // reset keys
+    vm.keys = new Array(16).fill(false)
+
+    // reset program counter and stack pointer
+    vm.pc = vm.base
+    vm.sp = 0
+
+    // reset address register
+    vm.i = 0
+
+    // reset virtual registers and user flags
+    vm.v = new Uint8Array(0x10).buffer
+    vm.r = new Uint8Array(0x8).buffer
+
+    // reset timer registers
+    vm.dt = 0
+    vm.st = 0
+
+    // reset the clock and cycles executed
+    vm.clock = new Date().getTime() * 1000
+    vm.cycles = 0
+
+    // not waiting for a key
+    vm.w = undefined
+
+    // not in high-res mode
+    vm.pitch = 8
+    console.log(new Uint8Array(vm.memory))
   }
 }
