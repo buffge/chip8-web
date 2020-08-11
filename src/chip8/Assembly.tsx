@@ -8,7 +8,7 @@ export default class Assembly {
   labels: Record<string, Token> = {}
   // Addresses with unresolved labels.
   unresolved: Record<number, string> = {}
-  base: number = 0x200
+  base: number
   // Super is true if using additional super CHIP-8 instructions.
   super: boolean = false
   // Extended is true if using additional CHIP-8E instructions.
@@ -20,7 +20,6 @@ export default class Assembly {
   assemble = (s: TokenScanner) => {
     const a = this
     let t = s.scanToken()
-    console.log(t)
     // assign labels
     if (t.typ === TokenType.LABEL) {
       t = a.assembleLabel(t.val as string, s)
@@ -54,7 +53,6 @@ export default class Assembly {
     if (label in a.labels) {
       throw new Error("duplicate label")
     }
-
     // by default, the label is assigned the current address
     a.labels[label] = new Token(TokenType.LIT, a.rom.byteLength)
 
@@ -64,7 +62,6 @@ export default class Assembly {
     // if EQU or VAR, reassign the label
     if (t.typ === TokenType.EQU || t.typ === TokenType.VAR) {
       let v = s.scanToken()
-
       // equ requires a literal, and var requires a v-register
       if (
         (t.typ === TokenType.EQU && v.typ === TokenType.LIT) ||
@@ -203,7 +200,6 @@ export default class Assembly {
         a.rom = bufPushItems(a.rom, a.assembleDRW(tokens))
         break
       case "LD":
-        console.log(206, tokens)
         a.rom = bufPushItems(a.rom, a.assembleLD(tokens))
         break
       case "ASCII":
@@ -342,7 +338,7 @@ export default class Assembly {
     ops = this.assembleOperands(tokens, [TokenType.V, TokenType.LIT])
     if (ops !== null) {
       let n2 = ops[0].val as number
-      let n = ops[0].val as number
+      let n = ops[1].val as number
       if (n2 === 0 && n < 0x1000) {
         return [0xb0 | ((n >> 8) & 0xf), n & 0xff]
       }
@@ -382,7 +378,7 @@ export default class Assembly {
     let ops = this.assembleOperands(tokens, [TokenType.V, TokenType.LIT])
     if (ops !== null) {
       let x = ops[0].val as number
-      let b = ops[0].val as number
+      let b = ops[1].val as number
       if (b < 0x100) {
         return [0x30 | x, b]
       }
@@ -390,7 +386,7 @@ export default class Assembly {
     ops = this.assembleOperands(tokens, [TokenType.V, TokenType.V])
     if (ops !== null) {
       let x = ops[0].val as number
-      let y = ops[0].val as number
+      let y = ops[1].val as number
       return [0x50 | x, y << 4]
     }
     panic("illegal instruction")
@@ -399,7 +395,7 @@ export default class Assembly {
     let ops = this.assembleOperands(tokens, [TokenType.V, TokenType.LIT])
     if (ops !== null) {
       let x = ops[0].val as number
-      let b = ops[0].val as number
+      let b = ops[1].val as number
       if (b < 0x100) {
         return [0x40 | x, b]
       }
@@ -407,7 +403,7 @@ export default class Assembly {
     ops = this.assembleOperands(tokens, [TokenType.V, TokenType.V])
     if (ops !== null) {
       let x = ops[0].val as number
-      let y = ops[0].val as number
+      let y = ops[1].val as number
       return [0x90 | x, y << 4]
     }
     panic("illegal instruction")
@@ -417,7 +413,7 @@ export default class Assembly {
       let ops = this.assembleOperands(tokens, [TokenType.V, TokenType.V])
       if (ops !== null) {
         let x = ops[0].val as number
-        let y = ops[0].val as number
+        let y = ops[1].val as number
         return [0x50 | x, (y << 4) | 0x01]
       }
     }
@@ -428,7 +424,7 @@ export default class Assembly {
       let ops = this.assembleOperands(tokens, [TokenType.V, TokenType.V])
       if (ops !== null) {
         let x = ops[0].val as number
-        let y = ops[0].val as number
+        let y = ops[1].val as number
         return [0x50 | x, (y << 4) | 0x02]
       }
     }
@@ -512,7 +508,7 @@ export default class Assembly {
     }
     ops = this.assembleOperands(tokens, [TokenType.I, TokenType.V])
     if (ops !== null) {
-      let x = ops[0].val as number
+      let x = ops[1].val as number
       return [0xf0 | x, 0x1e]
     }
     panic("illegal instruction")
@@ -785,10 +781,10 @@ export function buildAsm(program: ArrayBuffer, etiMode: boolean): Assembly {
   const asm = new Assembly(etiMode)
   let base = etiMode ? 0x600 : 0x200
   let line = 1
+
   program = bytesToUpper(program)
   let scanner = new BufScanner(program)
   for (; scanner.scan(); line++) {
-    console.log(line, scanner.bytes)
     asm.assemble(new TokenScanner(scanner.bytes as number[]))
   }
   let romView = new DataView(asm.rom)
@@ -801,12 +797,6 @@ export function buildAsm(program: ArrayBuffer, etiMode: boolean): Assembly {
       }
       let msb = (t.val as number) >> 8
       let lsb = t.val as number & 0xff
-      console.log(
-        "address:",
-        Number(address),
-        msb,
-        msb | (romView.getUint8(Number(address)) & 0xf0),
-      )
       romView.setUint8(Number(address), msb | (romView.getUint8(Number(address)) & 0xf0))
       // asm.rom[address] = msb | (asm.rom[address] & 0xf0)
       romView.setUint8(Number(address) + 1, lsb)
@@ -859,9 +849,8 @@ export function LoadROM(program: ArrayBuffer, eti: boolean): VM {
 export function loadAssembly(asm: Assembly, etiMode: boolean): VM {
   return LoadROM(asm.rom, etiMode)
 }
-function bufPushItems(buf: ArrayBuffer, items: number[]) {
+export function bufPushItems(buf: ArrayBuffer, items: number[]) {
   let newBuf = new ArrayBuffer(buf.byteLength + items.length)
-  console.log(864, buf, typeof buf)
   let bufView = new DataView(buf)
   let newBufView = new DataView(newBuf)
   for (let i = 0; i < buf.byteLength; i++) {
@@ -869,19 +858,24 @@ function bufPushItems(buf: ArrayBuffer, items: number[]) {
     // newBuf[i] = buf[i]
   }
   for (let i = buf.byteLength; i - buf.byteLength < items.length; i++) {
-    newBufView.setUint8(i, items[i])
+    newBufView.setUint8(i, items[i - buf.byteLength])
     // newBuf[i] = items[i]
   }
   return newBuf
 }
 
-function len(arr: Array<any>) {
+export function len(arr: Array<any>) {
   return arr.length
 }
-function append<T>(arr: Array<T>, items: T | T[]) {
+export function append<T>(arr: Array<T>, items: T | T[]) {
   Array.isArray(items) ? arr.push(...items) : arr.push(items)
   return arr
 }
-function panic(msg: string): never {
+export function panic(msg: string): never {
   throw new Error(msg)
 }
+export function uint<T>(a: T) {
+  return a
+}
+export const int = uint
+export const byte = uint

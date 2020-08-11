@@ -161,7 +161,6 @@ export class TokenScanner {
 
     // extract the label
     let id = String.fromCharCode.apply(null, this.bytes.slice(i, this.pos))
-    console.log(id, this.bytes.slice(i, this.pos))
     // determine whether the label is an instruction, register or reference
     switch (id) {
       case "V0":
@@ -293,7 +292,6 @@ export class TokenScanner {
       let nStr = ""
       this.bytes.slice(i, this.pos).map(v => (nStr += String.fromCharCode(v)))
       let n = parseInt(nStr, 10)
-      console.log(nStr, n, this.bytes.slice(i, this.pos))
       return new Token(TokenType.LIT, n)
     } catch (err) {
       throw new Error(
@@ -329,14 +327,13 @@ export class TokenScanner {
     let s = this
     let i = s.pos
     // find the first non-binary character
-    for (s.pos += 1; s.pos < s.bytes.length; s.pos += 1) {
+    for (s.pos += 1; s.pos < s.bytes.length; s.pos++) {
       // .01
-
       if (![46, 48, 49].includes(this.bytes[this.pos])) {
         break
       }
     }
-    let v = s.bytes.slice(i + 1, s.pos).filter(a => a !== 46)
+    let v = s.bytes.slice(i + 1, s.pos).map(a => (a === 46 ? 48 : a))
     let nStr = ""
     v.map(v => (nStr += String.fromCharCode(v)))
     let n = parseInt(nStr, 2)
