@@ -234,7 +234,7 @@ export default class VM {
     console.log(new Uint8Array(vm.memory))
   }
   sys = (_a: number) => {
-    panic("not impl sys")
+    // panic("not impl sys")
   }
   cls = () => {
     const vm = this
@@ -280,7 +280,7 @@ export default class VM {
     }
     let begin = n * this.pitch
     // shift this.video .byteLength pixels up
-    for (let i = 0; i < this.video.byteLength; i++) {
+    for (let i = 0; i + begin < this.video.byteLength; i++) {
       this.videoView.setUint8(i, this.videoView.getUint8(i + begin))
     }
 
@@ -295,7 +295,7 @@ export default class VM {
     }
     let begin = n * this.pitch
     // shift all the pixels down
-    for (let i = 0; i < this.video.byteLength; i++) {
+    for (let i = 0; i + begin < this.video.byteLength; i++) {
       this.videoView.setUint8(i + begin, this.videoView.getUint8(i))
     }
 
@@ -692,7 +692,7 @@ export default class VM {
         }
 
         // were any pixels turned off?
-        c |= b0 & ~video[n]
+        c |= b0 &= ~video[n]
         c |= b1 & ~video[n + 1]
       }
 

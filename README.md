@@ -53,8 +53,23 @@
 - `8{x}{y}2`: AND V{x}, V{y} ,V{x}&=V{y}  
 - `8{x}{y}3`: XOR V{x}, V{y} ,V{x}^=V{y}  
 - `8{x}{y}4`: ADD V{x}, V{y}, Set V{x} += V{y}, set VF = 溢出. v{x}+=v{y} ,如果结果大于8位 设置VF 为1表示溢出了 
-- `8{x}{y}5`: SUB V{x}, V{y}, Set Vx -= Vy, set VF = 结果为正数. 如果结果大于0 设置VF 为1表示结果为正数
+- `8{x}{y}5`: SUB V{x}, V{y}, Set V{x} -= Vy, set VF = 结果为正数. 如果结果大于0 设置VF 为1表示结果为正数
 - `8{x}{y}6`: SHR V{x}[,V{y}] 右移 V{X}>>=1,如果V{X}为奇数设置VF为1否则设为0
-- `8{x}{y}7`: SUBN V{x}, V{y}, Set Vx = Vy-Vx, set VF = 结果为正数
+- `8{x}{y}7`: SUBN V{x}, V{y}, Set V{x} = Vy-V{x}, set VF = 结果为正数
 - `8{x}{y}e`: SHL V{x}[,V{y}] 左移 V{X}<<=1,如果V{X}最高有效位是1(是负数)设置VF为1否则设为0
-
+- `9{x}{y}0`: SNE V{x} Vy,如果Vx!=Vy 则跳过下条指令
+- `a{nnn}`: LD I {nnn}, set I = {nnn}
+- `b{nnn}`: JP V0, addr, 设置pc为V0+{nnn}
+- `c{x}{kk}`: RND V{x}, byte, 生成一个随机数(0-255) 并和{kk}做与运算然后存入V{x}
+- `d{x}{y}n`: DRW V{x}, Vy, nibble
+- `e{x}9e`: SKP V{x} 如果 V{x} 对应的按键被按下跳过下条指令
+- `e{x}a1`: SKNP V{x}  如果 V{x} 对应的按键没有被按下跳过下条指令
+- `f{x}07`: LD V{x}, DT Set V{x} = delay timer value
+- `f{x}0a`: LD V{x}, K 等待按键,并将按键的值保存到Vx中
+- `f{x}15`: LD DT, V{x} Set delay timer = V{x}
+- `f{x}18`: LD ST, V{x} Set sound timer = V{x}
+- `f{x}1e`: ADD I, V{x} Set I += V{x}
+- `f{x}29`: LD F, V{x} 设置I = v{x}对应可视化字符保存的地址,也就是载入对应字体的地址
+- `f{x}33`: LD B, V{x} 将Vx的十进制数的百位保存到I中,十位保存到I+1,个位保存到I+2
+- `f{x}55`: LD [I], V{x} 从位置I开始将寄存器V0至V{x}存储在内存中
+- `f{x}65`: LD V{x}, [I] 从位置I开始将值写入寄存器V0至V{x}中

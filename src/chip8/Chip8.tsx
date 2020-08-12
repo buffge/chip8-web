@@ -39,7 +39,7 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
     this.log("Loading game...")
     this.vm = this.loadFile(this.props.program)
     this.log("program size: " + this.vm.size)
-    //
+    console.log("rom: ", new Uint8Array(this.vm.rom))
     this.loop()
   }
   loop = () => {
@@ -54,7 +54,7 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
     const vm = this.vm as VM
     const paused = this.paused
     // calculate how many cycles should have been executed
-    let count = ~~(((now - vm.clock) * vm.speed) / 1000 / 60)
+    let count = ~~(((now - vm.clock) * vm.speed) / 1000)
     // console.log(count, vm.cycles)
     // if paused, count cycles without stepping
     if (paused) {
