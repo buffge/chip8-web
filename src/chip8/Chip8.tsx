@@ -64,7 +64,7 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
       while (vm.cycles < count) {
         let err = vm.step()
         if (err) {
-          console.log(err)
+          // console.log(err)
           return err
         }
 
