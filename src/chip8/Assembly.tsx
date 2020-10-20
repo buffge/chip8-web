@@ -830,8 +830,7 @@ export function LoadROM(program: ArrayBuffer, eti: boolean): VM {
   vm.size = program.byteLength
   vm.base = base
   vm.speed = 700
-
-  const romView = new DataView(vm.rom)
+  const romView = new DataView(vm.rom.buffer)
   const programView = new DataView(program)
   // copy the RCA 1802 512 byte ROM into the CHIP-8 followed by the program
   for (let i = 0; i < emulatorROM.length; i++) {

@@ -43,9 +43,30 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
     this.loop()
   }
   loop = () => {
-    this.programTimer = setInterval(this.process, 1)
-    this.videoTimer = setInterval(this.redraw, 1000 / 60)
-    this.audioTimer = setInterval(this.updateSound, 1000 / 60)
+    this.programTimer = setInterval(() => {
+      try {
+        this.process()
+      } catch (err) {
+        clearInterval(this.programTimer as NodeJS.Timeout)
+        console.log(err)
+      }
+    }, 1)
+    this.videoTimer = setInterval(() => {
+      try {
+        this.redraw()
+      } catch (err) {
+        clearInterval(this.videoTimer as NodeJS.Timeout)
+        console.log(err)
+      }
+    }, 1000 / 60)
+    this.audioTimer = setInterval(() => {
+      try {
+        this.updateSound()
+      } catch (err) {
+        clearInterval(this.audioTimer as NodeJS.Timeout)
+        console.log(err)
+      }
+    }, 1000 / 60)
     // @ts-ignore
     window.vm = this.vm
   }
@@ -69,7 +90,7 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
         }
 
         // if waiting for a key, catch up
-        if (!vm.w) {
+        if (vm.w) {
           vm.cycles = count
         }
       }
@@ -82,16 +103,16 @@ export default class Chip8 extends Component<Props & DefaultProps, State> {
     const h = this.screenH
     const vm = this.vm as VM
     const cv2 = this.screenRef.current!.getContext("2d") as CanvasRenderingContext2D
+
     // const c1 = document.createElement("canvas")
     // const cv1 = c1.getContext("2d") as CanvasRenderingContext2D
     //设置线的颜色为黑色
     cv2.fillStyle = "rgba(143, 145, 133, 255)"
     cv2.fillRect(0, 0, this.screenW, this.screenH)
     let shift = 6 + (w >> 7)
-    const videoView = new DataView(vm.video)
     // draw all the pixels
     for (let p = 0; p < w * h; p++) {
-      if (p >> 3 < vm.video.byteLength && (videoView.getUint8(p >> 3) & (0x80 >> (p & 7))) !== 0) {
+      if (p >> 3 < vm.video.byteLength && (vm.video[p >> 3] & (0x80 >> (p & 7))) !== 0) {
         let x = p & (w - 1)
         let y = p >> shift
         // render the pixel to the screen
